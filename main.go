@@ -7,44 +7,88 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-const winWidth, winHeight int32 = 800, 600
+const winWidth, winHeight int = 800, 600
 
 type gameState int
-
-type color struct {
-	r, g, b byte
-}
 
 const (
 	start gameState = iota
 	play
 )
 
+type color struct {
+	r, g, b byte
+}
+
+type position struct {
+	x, y int
+}
+
+type paddle struct {
+	position
+	width, height, speed int
+	color                color
+}
+
 func main() {
-	window, err := sdl.CreateWindow("Pong", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, winWidth, winHeight, sdl.WINDOW_SHOWN)
+	window, err := sdl.CreateWindow("Pong", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, int32(winWidth), int32(winHeight), sdl.WINDOW_SHOWN)
 
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	defer window.Destroy()
 
 	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	defer renderer.Destroy()
 
 	tex, err := renderer.CreateTexture(sdl.PIXELFORMAT_ABGR8888, sdl.TEXTUREACCESS_STREAMING, int32(winWidth), int32(winHeight))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	defer tex.Destroy()
 
 	pixels := make([]byte, winWidth*winHeight*4)
-	pixels[0] = 255
 
-	// tex.Update(nil, pixels, winWidth*4)
-	tex.Update(nil, unsafe.Pointer(&pixels[0]), int(winWidth)*4)
-	fmt.Println(start)
-	fmt.Println(play)
+	paddleOne := paddle{position: position{x: 20, y: 20}, width: 30, height: 30, speed: 3, color: color{r: 255, g: 255, b: 255}}
+
+	for {
+		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+			switch event.(type) {
+			case *sdl.QuitEvent:
+				return
+			}
+		}
+
+		paddleOne.draw(pixels)
+
+		tex.Update(nil, unsafe.Pointer(&pixels[0]), int(winWidth)*4)
+		renderer.Copy(tex, nil, nil)
+		renderer.Present()
+		sdl.Delay(3000)
+	}
+}
+
+func (paddle *paddle) draw(pixels []byte) {
+	for x := paddle.x; x < paddle.width; x++ {
+		for y := paddle.y; y < paddle.height; y++ {
+			setPixel(x, y, paddle.color, pixels)
+		}
+	}
+}
+
+func setPixel(x, y int, c color, pixels []byte) {
+	index := (y*winWidth + x) * 4
+
+	if (index <= 0) || (index > len(pixels)) {
+		return
+	}
+	pixels[index] = c.r
+	pixels[index+1] = c.g
+	pixels[index+2] = c.b
 }
