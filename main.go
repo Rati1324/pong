@@ -7,7 +7,11 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-const winWidth, winHeight int = 800, 600
+const (
+	winWidth, winHeight int = 800, 600
+	paddleOffsetX       int = 30
+	paddleOffsetY       int = 30
+)
 
 type gameState int
 
@@ -55,7 +59,8 @@ func main() {
 
 	pixels := make([]byte, winWidth*winHeight*4)
 
-	paddleOne := paddle{position: position{x: 20, y: 20}, width: 30, height: 30, speed: 3, color: color{r: 255, g: 255, b: 255}}
+	paddleOne := paddle{position: position{x: paddleOffsetX, y: paddleOffsetY}, width: 30, height: 200, speed: 3, color: color{r: 255, g: 255, b: 255}}
+	paddleTwo := paddle{position: position{x: winWidth - (paddleOffsetX * 2), y: paddleOffsetY}, width: 30, height: 200, speed: 3, color: color{r: 255, g: 255, b: 255}}
 
 	for {
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
@@ -64,8 +69,8 @@ func main() {
 				return
 			}
 		}
-
 		paddleOne.draw(pixels)
+		paddleTwo.draw(pixels)
 
 		tex.Update(nil, unsafe.Pointer(&pixels[0]), int(winWidth)*4)
 		renderer.Copy(tex, nil, nil)
@@ -75,8 +80,8 @@ func main() {
 }
 
 func (paddle *paddle) draw(pixels []byte) {
-	for x := paddle.x; x < paddle.width; x++ {
-		for y := paddle.y; y < paddle.height; y++ {
+	for x := paddle.x; x < paddle.x+paddle.width; x++ {
+		for y := paddle.y; y < paddle.y+paddle.height; y++ {
 			setPixel(x, y, paddle.color, pixels)
 		}
 	}
@@ -85,7 +90,7 @@ func (paddle *paddle) draw(pixels []byte) {
 func setPixel(x, y int, c color, pixels []byte) {
 	index := (y*winWidth + x) * 4
 
-	if (index <= 0) || (index > len(pixels)) {
+	if (index < 0) || (index > len(pixels)-4) {
 		return
 	}
 	pixels[index] = c.r
