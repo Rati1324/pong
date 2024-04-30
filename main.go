@@ -22,6 +22,7 @@ const (
 
 type color struct {
 	r, g, b byte
+	
 }
 
 type position struct {
