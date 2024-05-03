@@ -30,7 +30,7 @@ type position struct {
 
 type paddle struct {
 	position
-	width, height, speed int
+	width, height, speed float32
 	color                color
 }
 
@@ -70,7 +70,7 @@ func main() {
 	paddleOne := paddle{position: position{x: paddleOffsetX, y: paddleOffsetY}, width: 30, height: 200, speed: 3, color: color{r: 255, g: 255, b: 255}}
 	paddleTwo := paddle{position: position{x: float32(winWidth) - (paddleOffsetX * 2), y: paddleOffsetY}, width: 30, height: 200, speed: 3, color: color{r: 255, g: 255, b: 255}}
 
-	// ball := ball{position: position{x: 51, y: 50}, radius: 30, xVel: 4, yVel: 4, color: color{r: 255, g: 255, b: 255}}
+	ball := ball{position: position{x: 51, y: 50}, radius: 30, xVel: 4, yVel: 4, color: color{r: 255, g: 255, b: 255}}
 
 	for {
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
@@ -81,7 +81,8 @@ func main() {
 		}
 		paddleOne.draw(pixels)
 		paddleTwo.draw(pixels)
-		// ball.draw(pixels)
+
+		ball.draw(pixels)
 
 		tex.Update(nil, unsafe.Pointer(&pixels[0]), int(winWidth)*4)
 		renderer.Copy(tex, nil, nil)
@@ -91,8 +92,11 @@ func main() {
 }
 
 func (paddle *paddle) draw(pixels []byte) {
-	for x := paddle.x; x < paddle.x; x++ {
-		for y := paddle.y; y < paddle.y; y++ {
+	startX := paddle.x - (paddle.width / 2)
+	startY := paddle.y - (paddle.height / 2)
+
+	for x := startX; x < startX+paddle.width; x++ {
+		for y := startY; y < startY+paddle.height; y++ {
 			setPixel(int(x), int(y), paddle.color, pixels)
 		}
 	}
